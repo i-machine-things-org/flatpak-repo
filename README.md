@@ -7,7 +7,7 @@ Each app is built and released individually; this repo aggregates the bundles we
 
 ```bash
 flatpak remote-add --if-not-exists i-machine-things \
-  https://i-machine-things.github.io/flatpak-repo/repo
+  https://i-machine-things-org.github.io/flatpak-repo/repo
 ```
 
 Or install the `.flatpakrepo` file:
