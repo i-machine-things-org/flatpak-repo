@@ -47,38 +47,16 @@ jobs:
                    publish/repo/refs/mirrors \
                    publish/repo/refs/remotes \
                    publish/repo/tmp
-          cat > publish/repo/config <<'EOF'
-          [core]
-          repo_version=1
-          mode=archive-z2
-          EOF
+          printf '[core]\nrepo_version=1\nmode=archive-z2\n' > publish/repo/config
           for bundle in bundles/*.flatpak; do
             echo "Importing $bundle ..."
             flatpak build-import-bundle publish/repo "$bundle"
           done
 
-      - name: Copy .flatpakrepo descriptor
-        run: cp i-machine-things.flatpakrepo publish/
-
-      - name: Write index page
+      - name: Copy static files
         run: |
-          cat > publish/index.html <<'EOF'
-          <!doctype html>
-          <html lang="en">
-          <head><meta charset="utf-8"><title>i-machine-things Flatpak Repo</title></head>
-          <body>
-          <h1>i-machine-things Flatpak Repository</h1>
-          <p>Add this remote to get updates for all published apps:</p>
-          <pre>flatpak remote-add --if-not-exists i-machine-things \
-            https://i-machine-things-org.github.io/flatpak-repo/repo</pre>
-          <h2>Apps</h2>
-          <ul>
-            <li><b>JobDocs</b> — io.github.i_machine_things.JobDocs</li>
-            <li><b>Honey Batchr</b> — com.honeybatchr.HoneyBatchr</li>
-          </ul>
-          </body>
-          </html>
-          EOF
+          cp i-machine-things.flatpakrepo publish/
+          cp index.html publish/
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
