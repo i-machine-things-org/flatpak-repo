@@ -1,0 +1,79 @@
+name: publish-flatpak-repo
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4 * * 1'   # weekly Monday 04:00 UTC
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed to push gh-pages
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Flatpak
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y flatpak
+
+      - name: Download JobDocs Flatpak bundle
+        run: |
+          mkdir -p bundles
+          gh release download \
+            --repo i-machine-things-org/JobDocs \
+            --pattern 'JobDocs-linux.flatpak' \
+            --dir bundles/ \
+            --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Download HoneyBatchr Flatpak bundle
+        run: |
+          gh release download \
+            --repo i-machine-things/HoneyBatchr \
+            --pattern 'HoneyBatchr-*-linux.flatpak' \
+            --dir bundles/ \
+            --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Import bundles into OSTree repo
+        run: |
+          mkdir -p publish/repo
+          for bundle in bundles/*.flatpak; do
+            echo "Importing $bundle ..."
+            flatpak build-import-bundle publish/repo "$bundle"
+          done
+
+      - name: Copy .flatpakrepo descriptor
+        run: cp i-machine-things.flatpakrepo publish/
+
+      - name: Write index page
+        run: |
+          cat > publish/index.html <<'EOF'
+          <!doctype html>
+          <html lang="en">
+          <head><meta charset="utf-8"><title>i-machine-things Flatpak Repo</title></head>
+          <body>
+          <h1>i-machine-things Flatpak Repository</h1>
+          <p>Add this remote to get updates for all published apps:</p>
+          <pre>flatpak remote-add --if-not-exists i-machine-things \
+            https://i-machine-things.github.io/flatpak-repo/repo</pre>
+          <h2>Apps</h2>
+          <ul>
+            <li><b>JobDocs</b> — io.github.i_machine_things.JobDocs</li>
+            <li><b>Honey Batchr</b> — com.honeybatchr.HoneyBatchr</li>
+          </ul>
+          </body>
+          </html>
+          EOF
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: publish/
+          force_orphan: true
