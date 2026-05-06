@@ -14,10 +14,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Flatpak
+      - name: Install Flatpak and OSTree
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y flatpak
+          sudo apt-get install -y flatpak ostree
 
       - name: Download JobDocs Flatpak bundle
         run: |
@@ -43,6 +43,7 @@ jobs:
       - name: Import bundles into OSTree repo
         run: |
           mkdir -p publish/repo
+          ostree init --repo=publish/repo --mode=archive-z2
           for bundle in bundles/*.flatpak; do
             echo "Importing $bundle ..."
             flatpak build-import-bundle publish/repo "$bundle"
