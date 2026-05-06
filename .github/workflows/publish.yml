@@ -42,8 +42,16 @@ jobs:
 
       - name: Import bundles into OSTree repo
         run: |
-          mkdir -p publish/repo
-          ostree init --repo=publish/repo --mode=archive-z2
+          mkdir -p publish/repo/objects \
+                   publish/repo/refs/heads \
+                   publish/repo/refs/mirrors \
+                   publish/repo/refs/remotes \
+                   publish/repo/tmp
+          cat > publish/repo/config <<'EOF'
+          [core]
+          repo_version=1
+          mode=archive-z2
+          EOF
           for bundle in bundles/*.flatpak; do
             echo "Importing $bundle ..."
             flatpak build-import-bundle publish/repo "$bundle"
