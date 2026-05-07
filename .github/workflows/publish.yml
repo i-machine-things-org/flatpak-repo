@@ -18,6 +18,8 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y flatpak ostree
+          flatpak --version
+          ostree --version
 
       - name: Download JobDocs Flatpak bundle
         run: |
@@ -40,18 +42,27 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
+      - name: List downloaded bundles
+        run: ls -lh bundles/
+
+      - name: Initialise OSTree repo
+        run: |
+          mkdir -p publish/repo
+          ostree init --repo=publish/repo --mode=archive-z2
+          echo "=== repo structure ==="
+          find publish/repo -maxdepth 3 | sort
+          echo "=== config ==="
+          cat publish/repo/config
+
       - name: Import bundles into OSTree repo
         run: |
-          mkdir -p publish/repo/objects \
-                   publish/repo/refs/heads \
-                   publish/repo/refs/mirrors \
-                   publish/repo/refs/remotes \
-                   publish/repo/tmp
-          printf '[core]\nrepo_version=1\nmode=archive-z2\n' > publish/repo/config
           for bundle in bundles/*.flatpak; do
-            echo "Importing $bundle ..."
+            echo "--- Importing $bundle ---"
             flatpak build-import-bundle publish/repo "$bundle"
           done
+
+      - name: Update repo summary
+        run: flatpak build-update-repo publish/repo
 
       - name: Copy static files
         run: |
