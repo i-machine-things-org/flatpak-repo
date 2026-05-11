@@ -1,0 +1,6 @@
+[Flatpak Repo]
+Title=i-machine-things Apps
+Name=i-machine-things
+Url=https://i-machine-things-org.github.io/flatpak-repo/repo
+Homepage=https://github.com/i-machine-things-org
+Description=All Flatpak apps published by i-machine-things — JobDocs and Honey Batchr
